@@ -78,6 +78,19 @@ struct route *create_route(
 );
 
 // TODO: Put your function prototypes here
+void command_loop(struct logbook *logbook){
+    char command;
+    while(scanf(" %c", &command) != EOF){
+        if(command == 'r'){
+            append_route(logbook);
+        }else if(command == 'p'){
+            print_routes(logbook);
+        }else if(command == '?'){
+            print_usage();
+        }
+        printf("Enter command: ");
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -88,17 +101,7 @@ int main(void) {
     printf("Enter command: ");
 
     struct logbook *new_logbook = create_logbook(NULL);
-    char command;
-    while (scanf("%c", &command) != EOF) {
-        if (command == HELP_COMMAND) {
-            print_usage();
-        } else if (command == 'r') {
-            append_route(new_logbook);
-        } else if (command == 'p') {
-            print_routes(new_logbook);
-        }
-        printf("Enter command: ");
-    }
+    command_loop(new_logbook);
     printf("\nGoodbye\n");
 
     return 0;
@@ -248,7 +251,7 @@ void print_usage(void) {
 //
 // Parameters:
 //      position    - The position of the route in the logbook (the first
-//                        route will be route_number 1, second will be 2, etc)
+//                        route will be route_number 1, second will be 2, etc.)
 //      route       - A pointer to the struct route to be printed
 //
 // Returns:
@@ -404,7 +407,7 @@ enum attempt_type string_to_type(char *type_str) {
 //
 // Parameters:
 //      buf         - The string to store the attempt type
-//      type        - The enum attempt_type to be converted
+//              - The enum attempt_type to be converted
 //
 // Returns:
 //      None
