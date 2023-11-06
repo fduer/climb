@@ -63,11 +63,16 @@ void print_one_attempt(
 int scan_token(char *buffer, int buffer_size);
 enum attempt_type string_to_type(char *type_str);
 void type_to_string(char *buf, enum attempt_type type);
-void append_route(struct logbook *new_logbook);
-void print_routes (struct logbook *new_logbook);
+void append_route(struct logbook *logbook);
+void print_routes (struct logbook *logbook);
 //2.1
-void print_filter_route(struct logbook *new_logbook);
-
+void print_filter_route(struct logbook *logbook);
+//2.2
+void insert_route(struct logbook *logbook);
+//2.3
+void change_length(struct logbook *logbook);
+//2.4
+void swap_route(struct logbook *logbook);
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////  YOUR FUNCTION PROTOTYPE  /////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -91,6 +96,12 @@ void command_loop(struct logbook *logbook){
             print_usage();
         }else if(command == 'f') {
             print_filter_route(logbook);
+        }else if(command == 'i') {
+            insert_route(logbook);
+        }else if(command == 'l') {
+            change_length(logbook);
+        }else if(command == 's') {
+            swap_route(logbook);
         }
         printf("Enter command: ");
     }
@@ -104,8 +115,8 @@ int main(void) {
     printf("Log all of your climbing adventures here! \n");
     printf("Enter command: ");
 
-    struct logbook *new_logbook = create_logbook(NULL);
-    command_loop(new_logbook);
+    struct logbook *logbook = create_logbook(NULL);
+    command_loop(logbook);
     printf("\nGoodbye\n");
 
     return 0;
@@ -115,10 +126,10 @@ int main(void) {
 /////////////////////////////  YOUR FUNCTIONS //////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 struct logbook *create_logbook(struct route *new_route) {
-    struct logbook *new_logbook = malloc(sizeof(struct logbook));
-    new_logbook->routes = NULL;
+    struct logbook *logbook = malloc(sizeof(struct logbook));
+    logbook->routes = NULL;
 
-    return new_logbook;
+    return logbook;
 }
 
 struct route *create_route(
@@ -138,8 +149,7 @@ struct route *create_route(
     return new_route;
 }
 
-//1.3
-void append_route(struct logbook *new_logbook)
+void append_route(struct logbook *logbook)
 {
     char name[MAX_STR_LEN];
     int difficulty, length;
@@ -158,11 +168,11 @@ void append_route(struct logbook *new_logbook)
         return;
     }
     // If logbook is empty, add the first route
-    if (new_logbook->routes == NULL) {
-        new_logbook->routes = new_route;
+    if (logbook->routes == NULL) {
+        logbook->routes = new_route;
     } else {
         //check if the route already exists
-        struct route *current = new_logbook->routes;
+        struct route *current = logbook->routes;
         while(current != NULL)
         {
             if(strcmp(current->name, name) == 0)
@@ -173,7 +183,7 @@ void append_route(struct logbook *new_logbook)
             current = current->next;
         }
         // Otherwise, add the route to the end of the logbook
-        current = new_logbook->routes;
+        current = logbook->routes;
         while(current->next != NULL)
         {
             current = current->next;
@@ -183,12 +193,11 @@ void append_route(struct logbook *new_logbook)
     printf("Route '%s' added successfully!\n", name);
 }
 
-
-void print_routes (struct logbook *new_logbook) {
-    if (new_logbook->routes == NULL) {
+void print_routes (struct logbook *logbook) {
+    if (logbook->routes == NULL) {
         printf("There are no routes in this logbook!\n");
     } else {
-        struct route *current = new_logbook->routes;
+        struct route *current = logbook->routes;
         int position = 1;
         while (current != NULL) {
             print_one_route(position, current);
@@ -198,7 +207,7 @@ void print_routes (struct logbook *new_logbook) {
     }
 }
 
-void print_filter_route(struct logbook *new_logbook){
+void print_filter_route(struct logbook *logbook){
     int difficulty_min, difficulty_max;
     scanf("%d %d", &difficulty_min, &difficulty_max);
     if(difficulty_min <= 0 || difficulty_min > 39 || difficulty_max <= 0 || difficulty_max > 39 || difficulty_min > difficulty_max)
@@ -207,7 +216,7 @@ void print_filter_route(struct logbook *new_logbook){
         return;
     }
     int position = 1;
-    struct route *current = new_logbook->routes;
+    struct route *current = logbook->routes;
     printf("Routes between difficulty %d and %d:\n", difficulty_min, difficulty_max);
     while(current != NULL)
     {
@@ -218,6 +227,223 @@ void print_filter_route(struct logbook *new_logbook){
         current = current->next;
         position++;
     }
+}
+
+void insert_route(struct logbook *logbook){
+    char name[MAX_STR_LEN], route_to_insert_before[MAX_STR_LEN];
+    int difficulty, length;
+    scan_string(name);
+    scanf("%d %d", &difficulty, &length);
+    scan_string(route_to_insert_before);
+    struct route *new_route = create_route(name, difficulty, length);
+    if(difficulty <= 0 || difficulty > 39)
+    {
+        printf("ERROR: Route difficulty must be between 1 and 39\n");
+        return;
+    }
+    if(length <= 0 || length > 60)
+    {
+        printf("ERROR: Route length must be between 1m and 60m\n");
+        return;
+    }
+    struct route *current = logbook->routes;
+    while(current != NULL)
+    {
+        if(strcmp(current->name, name) == 0)
+        {
+            printf("ERROR: A route with the name '%s' already exists in this logbook\n", name);
+            return;
+        }
+        current = current->next;
+    }
+    current = logbook->routes;
+    //if the route to insert before does not exist
+    while(current != NULL)
+    {
+        if(strcmp(current->name, route_to_insert_before) == 0)
+        {
+            break;
+        }
+        current = current->next;
+    }
+    if(current == NULL)
+    {
+        printf("ERROR: No route with the name '%s' exists in this logbook\n", route_to_insert_before);
+        return;
+    }
+    //if the route to insert before is the first route
+    current = logbook->routes;
+    if(strcmp(current->name, route_to_insert_before) == 0)
+    {
+        new_route->next = current;
+        logbook->routes = new_route;
+        printf("Route '%s' inserted successfully!\n", name);
+        return;
+    }
+    //if the route to insert before is not the first route
+    current = logbook->routes;
+    while(current->next != NULL)
+    {
+        if(strcmp(current->next->name, route_to_insert_before) == 0)
+        {
+            new_route->next = current->next;
+            current->next = new_route;
+            printf("Route '%s' inserted successfully!\n", name);
+            return;
+        }
+        current = current->next;
+    }
+}
+
+void change_length(struct logbook *logbook){
+    char route_1[MAX_STR_LEN], route_2[MAX_STR_LEN];
+    int length_change;
+    scan_string(route_1);
+    scan_string(route_2);
+    scanf("%d", &length_change);
+    if(length_change < -60 || length_change > 60)
+    {
+        printf("ERROR: Invalid length change! No route lengths have been changed\n");
+        return;
+    }
+    struct route *current = logbook->routes;
+    struct route *route_1_ptr = NULL;
+    struct route *route_2_ptr = NULL;
+    int position = 1;
+    int position_1 = 1, position_2 = 1;
+    while(current != NULL)
+    {
+        if(strcmp(current->name, route_1) == 0)
+        {
+            route_1_ptr = current;
+            position_1 = position;
+        }
+        if(strcmp(current->name, route_2) == 0)
+        {
+            route_2_ptr = current;
+            position_2 = position;
+        }
+        current = current->next;
+        ++position;
+    }
+    if(route_1_ptr == NULL)
+    {
+        printf("ERROR: No route with the name '%s' exists in this logbook\n", route_1);
+        return;
+    }
+    if(route_2_ptr == NULL)
+    {
+        printf("ERROR: No route with the name '%s' exists in this logbook\n", route_2);
+        return;
+    }
+    if(position_1 >= position_2)
+    {
+        //route_2 is before route_1, change the length of all routes between route_2 and route_1
+        //include route_2 and route_1
+        current = logbook->routes;
+        position = 1;
+        while(current != NULL)
+        {
+            if(position >= position_2 && position <= position_1)
+            {
+                if(current->length + length_change <= 0 || current->length + length_change > 60)
+                {
+                    printf("ERROR: Invalid length change! No route lengths have been changed\n");
+                    return;
+                }
+            }
+            current = current->next;
+            ++position;
+        }
+        current = logbook->routes;
+        position = 1;
+        while(current != NULL)
+        {
+            if(position >= position_2 && position <= position_1)
+            {
+                printf("Length of '%s' updated from %dm to %dm\n", current->name, current->length, current->length + length_change);
+                current->length += length_change;
+            }
+            current = current->next;
+            ++position;
+        }
+    }
+    else if(position_1 <= position_2)
+    {
+        //route_1 is before route_2, change the length of all routes between route_1 and route_2
+        //include route_1 and route_2
+        current = logbook->routes;
+        position = 1;
+        while(current != NULL)
+        {
+            if(position >= position_1 && position <= position_2)
+            {
+                if(current->length + length_change <= 0 || current->length + length_change > 60)
+                {
+                    printf("ERROR: Invalid length change! No route lengths have been changed\n");
+                    return;
+                }
+            }
+            current = current->next;
+            ++position;
+        }
+        current = logbook->routes;
+        position = 1;
+        while(current != NULL)
+        {
+            if(position >= position_1 && position <= position_2)
+            {
+                printf("Length of '%s' updated from %dm to %dm\n", current->name, current->length, current->length + length_change);
+                current->length += length_change;
+            }
+            current = current->next;
+            ++position;
+        }
+    }
+}
+
+void swap_route(struct logbook *logbook){
+    char route_1[MAX_STR_LEN], route_2[MAX_STR_LEN];
+    scan_string(route_1);
+    scan_string(route_2);
+    if(strcmp(route_1, route_2) == 0)
+    {
+        printf("ERROR: Cannot swap '%s' with itself\n", route_1);
+        return;
+    }
+    struct route *current = logbook->routes;
+    struct route *route_1_ptr = NULL;
+    struct route *route_2_ptr = NULL;
+    while(current != NULL)
+    {
+        if(strcmp(current->name, route_1) == 0)
+        {
+            route_1_ptr = current;
+        }
+        if(strcmp(current->name, route_2) == 0)
+        {
+            route_2_ptr = current;
+        }
+        current = current->next;
+    }
+    if(route_1_ptr == NULL)
+    {
+        printf("ERROR: No route with the name '%s' exists in this logbook\n", route_1);
+        return;
+    }
+    if(route_2_ptr == NULL)
+    {
+        printf("ERROR: No route with the name '%s' exists in this logbook\n", route_2);
+        return;
+    }
+    char route_1_name[MAX_STR_LEN], route_2_name[MAX_STR_LEN];
+    strcpy(route_1_name, route_1_ptr->name);
+    strcpy(route_2_name, route_2_ptr->name);
+    route_1_ptr->length^=route_2_ptr->length^=route_1_ptr->length^=route_2_ptr->length;
+    route_1_ptr->difficulty^=route_2_ptr->difficulty^=route_1_ptr->difficulty^=route_2_ptr->difficulty;
+    strcpy(route_1_ptr->name, route_2_name);
+    strcpy(route_2_ptr->name, route_1_name);
+    printf("'%s' swapped positions with '%s'!\n", route_1, route_2);
 }
 ////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////  PROVIDED FUNCTIONS  ///////////////////////////////
