@@ -437,10 +437,14 @@ void swap_route(struct logbook *logbook){
         return;
     }
     char route_1_name[MAX_STR_LEN], route_2_name[MAX_STR_LEN];
+    int route_1_difficulty = route_1_ptr->difficulty, route_2_difficulty = route_2_ptr->difficulty;
+    int route_1_length = route_1_ptr->length, route_2_length = route_2_ptr->length;
     strcpy(route_1_name, route_1_ptr->name);
     strcpy(route_2_name, route_2_ptr->name);
-    route_1_ptr->length^=route_2_ptr->length^=route_1_ptr->length^=route_2_ptr->length;
-    route_1_ptr->difficulty^=route_2_ptr->difficulty^=route_1_ptr->difficulty^=route_2_ptr->difficulty;
+    route_1_ptr->difficulty = route_2_difficulty;
+    route_2_ptr->difficulty = route_1_difficulty;
+    route_1_ptr->length = route_2_length;
+    route_2_ptr->length = route_1_length;
     strcpy(route_1_ptr->name, route_2_name);
     strcpy(route_2_ptr->name, route_1_name);
     printf("'%s' swapped positions with '%s'!\n", route_1, route_2);
