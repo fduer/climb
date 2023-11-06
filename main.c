@@ -553,6 +553,8 @@ void add_attempt(struct logbook *logbook, struct route_name **most_recent_route)
                     if (strcmp(new_attempt->climber, attempt->climber) == 0 && new_attempt->type == FIRST_GO) {
                         printf("ERROR: %s has already attempted '%s' - they can't get it on their first go!\n",
                                new_attempt->climber, route_name);
+                        //free memory
+                        free(new_attempt);
                         return;
                     }
                     new_attempt->next = attempt;
@@ -566,6 +568,8 @@ void add_attempt(struct logbook *logbook, struct route_name **most_recent_route)
                                 new_attempt->type == FIRST_GO) {
                                 printf("ERROR: %s has already attempted '%s' - they can't get it on their first go!\n",
                                        new_attempt->climber, route_name);
+                                //free memory
+                                free(new_attempt);
                                 return;
                             }
                             new_attempt->next = attempt->next;
