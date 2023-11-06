@@ -94,6 +94,14 @@ void add_attempt(struct logbook *logbook, struct route_name **most_recent_route)
 void update_recent_route_name(struct route_name **head, char name[MAX_STR_LEN]);
 //3.2
 void print_logbook(struct logbook *logbook);
+//3.3
+void remove_route(struct logbook **logbook, int combine);
+//3.4
+void delete_climber_attempts(struct logbook *logbook);
+//3.5
+int has_climbed(struct route *route, char climber[MAX_STR_LEN]);
+void duplicate_attempts(struct logbook *logbook, struct route_name **most_recent_route);
+void add_attempt_in_route(struct route *route, char climber[MAX_STR_LEN], enum attempt_type type, int rating, struct route_name **most_recent_route, int combine);
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////  YOUR FUNCTION PROTOTYPE  /////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -127,6 +135,12 @@ void command_loop(struct logbook *logbook, struct route_name *most_recent_route_
             add_attempt(logbook, &most_recent_route_name);
         }else if(command == 'P') {
             print_logbook(logbook);
+        }else if(command == 'R') {
+            remove_route(&logbook, 0);
+        }else if(command == 'D') {
+            delete_climber_attempts(logbook);
+        }else if(command == 'd'){
+            duplicate_attempts(logbook, &most_recent_route_name);
         }
         printf("Enter command: ");
     }
@@ -593,9 +607,187 @@ void print_logbook(struct logbook *logbook) {
             route = route->next;
             position++;
         }
-
     }
 }
+
+void remove_route(struct logbook **logbook, int combine) {
+    char route_name[MAX_STR_LEN];
+    scan_string(route_name);
+    int found = 0;
+    struct route *route = (*logbook)->routes;
+    struct route *pre = NULL;
+    while (route != NULL) {
+        if (strcmp(route->name, route_name) == 0) {
+            found = 1;
+            if (pre == NULL) {
+                (*logbook)->routes = route->next;
+            } else {
+                pre->next = route->next;
+            }
+            struct attempt *attempt = route->attempts;
+            while (attempt != NULL) {
+                struct attempt *temp = attempt;
+                attempt = attempt->next;
+                free(temp);
+            }
+            free(route);
+            break;
+        }
+        pre = route;
+        route = route->next;
+    }
+    if(!combine){
+        if (found == 0) {
+            printf("ERROR: No route with the name '%s' exists in this logbook\n", route_name);
+        } else {
+            printf("Removed route '%s' from logbook\n", route_name);
+        }
+    }
+}
+
+void delete_climber_attempts(struct logbook *logbook) {
+    char climber[MAX_STR_LEN];
+    scan_string(climber);
+    int found = 0;
+    int count = 0;
+    struct route *route = logbook->routes;
+    while (route != NULL) {
+        struct attempt *attempt = route->attempts;
+        struct attempt *pre = NULL;
+        while (attempt != NULL) {
+            if (strcmp(attempt->climber, climber) == 0) {
+                found = 1;
+                ++count;
+                if (pre == NULL) {
+                    route->attempts = attempt->next;
+                } else {
+                    pre->next = attempt->next;
+                }
+                struct attempt *temp = attempt;
+                attempt = attempt->next;
+                free(temp);
+            } else {
+                pre = attempt;
+                attempt = attempt->next;
+            }
+        }
+        route = route->next;
+    }
+    if (!found) {
+        printf("ERROR: %s has not logged any attempts\n", climber);
+    } else {
+        printf("Deleted %d attempt(s) logged by %s\n", count, climber);
+
+    }
+}//暂时不写most_recent_route的更新
+
+int has_climbed(struct route *route, char climber[MAX_STR_LEN]) {
+    struct attempt *attempt = route->attempts;
+    while (attempt != NULL) {
+        if (strcmp(attempt->climber, climber) == 0) {
+            return 1;
+        }
+        attempt = attempt->next;
+    }
+    return 0;
+}
+void duplicate_attempts(struct logbook *logbook, struct route_name **most_recent_route) {
+    char climber_1[MAX_STR_LEN]; //climber_1 is the climber who will have their attempts duplicated
+    char climber_2[MAX_STR_LEN]; //climber_2 is the climber whose attempts will be duplicated
+    scan_string(climber_1);
+    scan_string(climber_2);
+    if(strcmp(climber_1, climber_2) == 0){
+        printf("ERROR: Cannot duplicate attempts made by the same climber\n");
+        return;
+    }
+    int found = 0;
+    struct route *route = logbook->routes;
+    while (route != NULL) {
+        struct attempt *attempt = route->attempts;
+        struct attempt *addList = NULL;
+        while (attempt != NULL) {
+            if(strcmp(attempt->climber, climber_2) == 0){
+                //attempt is made by climber_2
+                found = 1;
+                struct attempt *new_attempt = malloc(sizeof(struct attempt));
+                strcpy(new_attempt->climber, climber_1);
+                new_attempt->type = attempt->type;
+                new_attempt->rating = attempt->rating;
+                new_attempt->next = NULL;
+                // insert new attempt into the head of the addList
+                if(addList == NULL){
+                    addList = new_attempt;
+                }else{
+                    new_attempt->next = addList;
+                    addList = new_attempt;
+                }
+            }
+            attempt = attempt->next;
+        }
+        if(addList != NULL){
+            // addList is not empty
+            struct attempt *new_attempt = addList;
+            while(new_attempt != NULL){
+                if(has_climbed(route, climber_1) && new_attempt->type == FIRST_GO){
+                    add_attempt_in_route(route, new_attempt->climber, SUCCESS, new_attempt->rating, most_recent_route, 0);
+                }
+                else{
+                    add_attempt_in_route(route, new_attempt->climber, new_attempt->type, new_attempt->rating, most_recent_route, 0);
+                }
+                new_attempt = new_attempt->next;
+            }
+        }
+        //free addList
+        if(addList != NULL){
+            struct attempt *temp = addList;
+            while(temp != NULL){
+                addList = addList->next;
+                free(temp);
+                temp = addList;
+            }
+        }
+        route = route->next;
+    }
+    if (!found) {
+        printf("ERROR: %s has not logged any attempts\n", climber_2);
+    }
+}
+void add_attempt_in_route(struct route *route, char climber[MAX_STR_LEN], enum attempt_type type, int rating, struct route_name **most_recent_route, int combine) {
+    struct attempt *attempt = route->attempts;
+    struct attempt *new_attempt = malloc(sizeof(struct attempt));
+    strcpy(new_attempt->climber, climber);
+    new_attempt->type = type;
+    new_attempt->rating = rating;
+    new_attempt->next = NULL;
+    if(!combine) {
+        update_recent_route_name(most_recent_route, route->name);
+    }
+    //Attempts should be added in alphabetical order by climber name.
+    // the most recent attempt always appears first.
+    // the type won't be first go
+    if (strcmp(new_attempt->climber, attempt->climber) <= 0) {
+        //new attempt is the first attempt
+        new_attempt->next = attempt;
+        route->attempts = new_attempt;
+    }
+    else {
+        //new attempt is not the first attempt
+        while (attempt->next != NULL) {
+            if (strcmp(new_attempt->climber, attempt->next->climber) <= 0) {
+                //new attempt is not the last attempt
+                new_attempt->next = attempt->next;
+                attempt->next = new_attempt;
+                break;
+            }
+            attempt = attempt->next;
+        }
+        attempt->next = new_attempt;
+    }
+    if(!combine)
+        printf("Logged attempt of '%s' by %s\n", route->name, climber);
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////  PROVIDED FUNCTIONS  ///////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
