@@ -48,12 +48,18 @@ struct attempt {
     // A pointer to the next `struct attempt` for this route
     struct attempt *next;
 };
-
 struct route_name{
     char name[MAX_STR_LEN];
     struct route_name *next;
 };
-// Represents the logbook that contains info on each climbing route
+struct climber_details{
+    char climber[MAX_STR_LEN];
+    int first_go;
+    int success;
+    int fail;
+    int total;
+    struct climber_details *next;
+};
 struct logbook {
     // A pointer to the first `struct route` in the list
     struct route *routes;
@@ -105,6 +111,9 @@ void add_attempt_in_route(struct route *route, char climber[MAX_STR_LEN], enum a
 //4.1
 void delete_route(struct logbook *logbook, struct route *route);
 void combine_routes(struct logbook *logbook, struct route_name *most_recent_route);
+//4.2
+struct climber_details *count_climber_details(struct logbook *logbook, struct route *route);
+void print_leaderboard(struct logbook *logbook);
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////  YOUR FUNCTION PROTOTYPE  /////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -146,6 +155,8 @@ void command_loop(struct logbook *logbook, struct route_name *most_recent_route_
             duplicate_attempts(logbook, &most_recent_route_name);
         }else if(command == 'c') {
             combine_routes(logbook, most_recent_route_name);
+        }else if(command == 'L') {
+            print_leaderboard(logbook);
         }
         printf("Enter command: ");
     }
@@ -996,6 +1007,194 @@ void combine_routes(struct logbook *logbook, struct route_name *most_recent_rout
             delete_route(logbook, route_1_ptr);
         }
         printf("Successfully combined routes '%s' and '%s'\n", route_1, route_2);
+    }
+}
+
+struct climber_details *count_climber_details(struct logbook *logbook, struct route *route){
+    struct attempt *attempt = route->attempts;
+    struct climber_details *climber_list = NULL;
+    char now_climber_name[MAX_STR_LEN];
+    while(attempt != NULL){
+        if(climber_list == NULL){
+            struct climber_details *new_climber = malloc(sizeof(struct climber_details));
+            strcpy(new_climber->climber, attempt->climber);
+            strcpy(now_climber_name, attempt->climber);
+            new_climber->first_go = 0;
+            new_climber->success = 0;
+            new_climber->fail = 0;
+            new_climber->total = 0;
+            new_climber->next = NULL;
+            climber_list = new_climber;
+            continue;
+        }
+        else{
+            if(strcmp(attempt->climber, now_climber_name) == 0){
+                //attempt is made by the same climber as the previous attempt
+                //do nothing
+            }
+            else{
+                //attempt is made by a different climber
+                //add this climber to climber_list
+                struct climber_details *new_climber = malloc(sizeof(struct climber_details));
+                strcpy(new_climber->climber, attempt->climber);
+                strcpy(now_climber_name, attempt->climber);
+                new_climber->first_go = 0;
+                new_climber->success = 0;
+                new_climber->fail = 0;
+                new_climber->total = 0;
+                new_climber->next = NULL;
+                //insert new_climber into the tail of climber_list
+                struct climber_details *temp = climber_list;
+                while(temp->next != NULL){
+                    temp = temp->next;
+                }
+                temp->next = new_climber;
+            }
+        }
+        attempt = attempt->next;
+    }
+    //count the number of first_go, success, fail and total for each climber
+    attempt = route->attempts;
+    while(attempt != NULL){
+        struct climber_details *temp = climber_list;
+        while(temp != NULL){
+            if(strcmp(attempt->climber, temp->climber) == 0){
+                //attempt is made by the same climber as temp
+                if(attempt->type == FIRST_GO){
+                    temp->first_go++;
+                    temp->success++;
+                }
+                if(attempt->type == SUCCESS){
+                    temp->success++;
+                }
+                if(attempt->type == FAIL){
+                    temp->fail++;
+                }
+                temp->total++;
+                break;
+            }
+            temp = temp->next;
+        }
+        attempt = attempt->next;
+    }
+    //sort climber_list by the number of first_go, success and total
+    struct climber_details *temp = climber_list;
+    while(temp != NULL) {
+        struct climber_details *temp2 = temp->next;
+        while (temp2 != NULL) {
+            if (temp->first_go < temp2->first_go) {
+                //swap temp and temp2
+                char temp_climber[MAX_STR_LEN];
+                strcpy(temp_climber, temp->climber);
+                strcpy(temp->climber, temp2->climber);
+                strcpy(temp2->climber, temp_climber);
+                int temp_first_go = temp->first_go;
+                temp->first_go = temp2->first_go;
+                temp2->first_go = temp_first_go;
+                int temp_success = temp->success;
+                temp->success = temp2->success;
+                temp2->success = temp_success;
+                int temp_fail = temp->fail;
+                temp->fail = temp2->fail;
+                temp2->fail = temp_fail;
+                int temp_total = temp->total;
+                temp->total = temp2->total;
+                temp2->total = temp_total;
+            } else if (temp->first_go == temp2->first_go) {
+                if (temp->success < temp2->success) {
+                    //swap temp and temp2
+                    char temp_climber[MAX_STR_LEN];
+                    strcpy(temp_climber, temp->climber);
+                    strcpy(temp->climber, temp2->climber);
+                    strcpy(temp2->climber, temp_climber);
+                    int temp_first_go = temp->first_go;
+                    temp->first_go = temp2->first_go;
+                    temp2->first_go = temp_first_go;
+                    int temp_success = temp->success;
+                    temp->success = temp2->success;
+                    temp2->success = temp_success;
+                    int temp_fail = temp->fail;
+                    temp->fail = temp2->fail;
+                    temp2->fail = temp_fail;
+                    int temp_total = temp->total;
+                    temp->total = temp2->total;
+                    temp2->total = temp_total;
+                } else if (temp->success == temp2->success) {
+                    if (temp->total < temp2->total) {
+                        //swap temp and temp2
+                        char temp_climber[MAX_STR_LEN];
+                        strcpy(temp_climber, temp->climber);
+                        strcpy(temp->climber, temp2->climber);
+                        strcpy(temp2->climber, temp_climber);
+                        int temp_first_go = temp->first_go;
+                        temp->first_go = temp2->first_go;
+                        temp2->first_go = temp_first_go;
+                        int temp_success = temp->success;
+                        temp->success = temp2->success;
+                        temp2->success = temp_success;
+                        int temp_fail = temp->fail;
+                        temp->fail = temp2->fail;
+                        temp2->fail = temp_fail;
+                        int temp_total = temp->total;
+                        temp->total = temp2->total;
+                        temp2->total = temp_total;
+                    }
+                }
+            }
+            temp2 = temp2->next;
+        }
+        temp = temp->next;
+    }
+    return climber_list;
+}
+void print_leaderboard(struct logbook *logbook){
+    char route_name[MAX_STR_LEN];
+    scan_string(route_name);
+    struct route *route = logbook->routes;
+    int found = 0;
+    while(route != NULL){
+        if(strcmp(route->name, route_name) == 0){
+            found = 1;
+            break;
+        }
+        route = route->next;
+    }
+    if(!found){
+        printf("ERROR: No route with the name '%s' exists in this logbook\n", route_name);
+        return;
+    }
+    struct attempt *attempt = route->attempts;
+    if(attempt == NULL){
+        printf("No attempts have been logged for the route '%s'\n", route_name);
+        return;
+    }
+    struct climber_details *climber_list = NULL;
+    climber_list = count_climber_details(logbook, route);
+    //print the leaderboard
+    int ranking = 1;
+    int first_go = 0;
+    printf("'%s' Leaderboard\n", route_name);
+    struct climber_details *temp = climber_list;
+    while(temp != NULL){
+        printf("     #%d %s\n",ranking, temp->climber);
+        if(temp->first_go > 0 && first_go == 0){
+            printf("        First go attempt!\n");
+            first_go = 1;
+        }
+        printf("        Successful attempts: %d\n", temp->success);
+        printf("        Total attempts:      %d\n", temp->total);
+        printf("\n");
+        temp = temp->next;
+        ++ranking;
+    }
+    //free climber_list
+    if(climber_list != NULL){
+        struct climber_details *tempList = climber_list;
+        while(tempList != NULL){
+            climber_list = climber_list->next;
+            free(tempList);
+            tempList = climber_list;
+        }
     }
 }
 
