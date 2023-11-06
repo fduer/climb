@@ -534,14 +534,14 @@ void add_attempt(struct logbook *logbook, struct route_name **most_recent_route)
         if (strcmp(route->name, route_name) == 0) {
             struct attempt *attempt = route->attempts;
             if (attempt == NULL) {
-                attempt = malloc(sizeof(struct attempt));
+                attempt = (struct attempt*)malloc(sizeof(struct attempt));
                 strcpy(attempt->climber, climber);
                 attempt->type = type;
                 attempt->rating = rating;
                 attempt->next = NULL;
                 route->attempts = attempt;
             } else {
-                struct attempt *new_attempt = malloc(sizeof(struct attempt));
+                struct attempt *new_attempt = (struct attempt*)malloc(sizeof(struct attempt));
                 strcpy(new_attempt->climber, climber);
                 new_attempt->type = type;
                 new_attempt->rating = rating;
