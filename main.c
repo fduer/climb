@@ -161,7 +161,7 @@ void command_loop(struct logbook *logbook, struct route_name *most_recent_route_
             append_route(logbook);
         } else if (command == 'p') {
             print_routes(logbook);
-        } else if (command == '?') {
+        } else if (command == HELP_COMMAND) {
             print_usage();
         } else if (command == 'f') {
             print_filter_route(logbook);
@@ -199,8 +199,10 @@ int main(void) {
     printf("Enter command: ");
 
     struct logbook *logbook = create_logbook(NULL);
-    struct route_name most_recent_route_name = {"tail", NULL};
-    command_loop(logbook, &most_recent_route_name);
+    struct route_name *most_recent_route_name = (struct route_name*)malloc(sizeof(struct route_name));
+    most_recent_route_name->next = NULL;
+    strcpy(most_recent_route_name->name, "NULL");
+    command_loop(logbook, most_recent_route_name);
     printf("\nGoodbye\n");
     //free memory
     struct route *route = logbook->routes;
@@ -215,7 +217,7 @@ int main(void) {
         route = route->next;
         free(temp);
     }
-    struct route_name *route_name = &most_recent_route_name;
+    struct route_name *route_name = most_recent_route_name;
     while (route_name != NULL) {
         struct route_name *temp = route_name;
         route_name = route_name->next;
