@@ -65,6 +65,8 @@ enum attempt_type string_to_type(char *type_str);
 void type_to_string(char *buf, enum attempt_type type);
 void append_route(struct logbook *new_logbook);
 void print_routes (struct logbook *new_logbook);
+//2.1
+void print_filter_route(struct logbook *new_logbook);
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////  YOUR FUNCTION PROTOTYPE  /////////////////////////////
@@ -87,6 +89,8 @@ void command_loop(struct logbook *logbook){
             print_routes(logbook);
         }else if(command == '?'){
             print_usage();
+        }else if(command == 'f') {
+            print_filter_route(logbook);
         }
         printf("Enter command: ");
     }
@@ -191,6 +195,28 @@ void print_routes (struct logbook *new_logbook) {
             current = current->next;
             position++;
         }
+    }
+}
+
+void print_filter_route(struct logbook *new_logbook){
+    int difficulty_min, difficulty_max;
+    scanf("%d %d", &difficulty_min, &difficulty_max);
+    if(difficulty_min <= 0 || difficulty_min > 39 || difficulty_max <= 0 || difficulty_max > 39 || difficulty_min > difficulty_max)
+    {
+        printf("ERROR: Difficulty range invalid!\n");
+        return;
+    }
+    int position = 1;
+    struct route *current = new_logbook->routes;
+    printf("Routes between difficulty %d and %d:\n", difficulty_min, difficulty_max);
+    while(current != NULL)
+    {
+        if(current->difficulty >= difficulty_min && current->difficulty <= difficulty_max)
+        {
+            print_one_route(position, current);
+        }
+        current = current->next;
+        position++;
     }
 }
 ////////////////////////////////////////////////////////////////////////////////
