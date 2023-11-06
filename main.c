@@ -229,7 +229,7 @@ int main(void) {
 /////////////////////////////  YOUR FUNCTIONS //////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 struct logbook *create_logbook(struct route *new_route) {
-    struct logbook *logbook = malloc(sizeof(struct logbook));
+    struct logbook *logbook = (struct logbook* )malloc(sizeof(struct logbook));
     logbook->routes = NULL;
 
     return logbook;
@@ -242,7 +242,7 @@ struct route *create_route(
 ) {
     // STAGE 1.1
     // TODO: malloc, initialise and return a new route
-    struct route *new_route = malloc(sizeof(struct route));
+    struct route *new_route = (struct route* )malloc(sizeof(struct route));
     new_route->difficulty = difficulty;
     new_route->length = length;
     strcpy(new_route->name, name);
@@ -590,7 +590,7 @@ void add_attempt(struct logbook *logbook, struct route_name **most_recent_route)
 }
 
 void update_recent_route_name(struct route_name **head, char name[MAX_STR_LEN]) {
-    struct route_name *new_route_name = malloc(sizeof(struct route_name));
+    struct route_name *new_route_name = (struct route_name* )malloc(sizeof(struct route_name));
     strcpy(new_route_name->name, name);
     new_route_name->next = NULL;
     if (*head == NULL) {
@@ -736,7 +736,7 @@ void duplicate_attempts(struct logbook *logbook, struct route_name **most_recent
             if (strcmp(attempt->climber, climber_2) == 0) {
                 //attempt is made by climber_2
                 found = 1;
-                struct attempt *new_attempt = malloc(sizeof(struct attempt));
+                struct attempt *new_attempt = (struct attempt* )malloc(sizeof(struct attempt));
                 strcpy(new_attempt->climber, climber_1);
                 new_attempt->type = attempt->type;
                 new_attempt->rating = attempt->rating;
@@ -784,7 +784,7 @@ void duplicate_attempts(struct logbook *logbook, struct route_name **most_recent
 void add_attempt_in_route(struct route *route, char climber[MAX_STR_LEN], enum attempt_type type, int rating,
                           struct route_name **most_recent_route, int combine) {
     struct attempt *attempt = route->attempts;
-    struct attempt *new_attempt = malloc(sizeof(struct attempt));
+    struct attempt *new_attempt = (struct attempt* )malloc(sizeof(struct attempt));
     strcpy(new_attempt->climber, climber);
     new_attempt->type = type;
     new_attempt->rating = rating;
@@ -912,7 +912,7 @@ void combine_routes(struct logbook *logbook, struct route_name *most_recent_rout
             struct attempt *addList = NULL;
             //addList is a list of reversed attempts in route_2_ptr
             while (attempt != NULL) {
-                struct attempt *new_attempt = malloc(sizeof(struct attempt));
+                struct attempt *new_attempt = (struct attempt* )malloc(sizeof(struct attempt));
                 strcpy(new_attempt->climber, attempt->climber);
                 new_attempt->type = attempt->type;
                 new_attempt->rating = attempt->rating;
@@ -961,7 +961,7 @@ void combine_routes(struct logbook *logbook, struct route_name *most_recent_rout
             struct attempt *addList = NULL;
             //addList is a list of reversed attempts in route_1_ptr
             while (attempt != NULL) {
-                struct attempt *new_attempt = malloc(sizeof(struct attempt));
+                struct attempt *new_attempt = (struct attempt* )malloc(sizeof(struct attempt));
                 strcpy(new_attempt->climber, attempt->climber);
                 new_attempt->type = attempt->type;
                 new_attempt->rating = attempt->rating;
@@ -1010,7 +1010,7 @@ struct climber_details *count_climber_details(struct logbook *logbook, struct ro
     char now_climber_name[MAX_STR_LEN];
     while (attempt != NULL) {
         if (climber_list == NULL) {
-            struct climber_details *new_climber = malloc(sizeof(struct climber_details));
+            struct climber_details *new_climber = (struct climber_details* )malloc(sizeof(struct climber_details));
             strcpy(new_climber->climber, attempt->climber);
             strcpy(now_climber_name, attempt->climber);
             new_climber->first_go = 0;
@@ -1027,7 +1027,7 @@ struct climber_details *count_climber_details(struct logbook *logbook, struct ro
             } else {
                 //attempt is made by a different climber
                 //add this climber to climber_list
-                struct climber_details *new_climber = malloc(sizeof(struct climber_details));
+                struct climber_details *new_climber = (struct climber_details*)malloc(sizeof(struct climber_details));
                 strcpy(new_climber->climber, attempt->climber);
                 strcpy(now_climber_name, attempt->climber);
                 new_climber->first_go = 0;
