@@ -521,7 +521,6 @@ void add_attempt(struct logbook *logbook, struct route_name **most_recent_route)
     type = scan_attempt_type();
     scanf("%d", &rating);
     scan_string(route_name);
-    update_recent_route_name(most_recent_route, route_name);
     if (type == INVALID_TYPE) {
         printf("ERROR: Attempt type invalid\n");
         return;
@@ -583,6 +582,7 @@ void add_attempt(struct logbook *logbook, struct route_name **most_recent_route)
         route = route->next;
     }
     printf("Logged attempt of '%s' by %s\n", route_name, climber);
+    update_recent_route_name(most_recent_route, route_name);
 }
 
 void update_recent_route_name(struct route_name **head, char name[MAX_STR_LEN]) {
