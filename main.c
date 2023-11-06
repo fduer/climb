@@ -1175,14 +1175,12 @@ void print_leaderboard(struct logbook *logbook) {
     climber_list = count_climber_details(logbook, route);
     //print the leaderboard
     int ranking = 1;
-    int first_go = 0;
     printf("'%s' Leaderboard\n", route_name);
     struct climber_details *temp = climber_list;
     while (temp != NULL) {
         printf("     #%d %s\n", ranking, temp->climber);
-        if (temp->first_go > 0 && first_go == 0) {
+        if (temp->first_go > 0) {
             printf("        First go attempt!\n");
-            first_go = 1;
         }
         printf("        Successful attempts: %d\n", temp->success);
         printf("        Total attempts:      %d\n", temp->total);
