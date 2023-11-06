@@ -309,8 +309,15 @@ void print_routes(struct logbook *logbook) {
 void print_filter_route(struct logbook *logbook) {
     int difficulty_min, difficulty_max;
     scanf("%d %d", &difficulty_min, &difficulty_max);
-    if (difficulty_min <= 0 || difficulty_min > 39 || difficulty_max <= 0 || difficulty_max > 39 ||
-        difficulty_min > difficulty_max) {
+    if (difficulty_min <= 0 || difficulty_min > 39) {
+        printf("ERROR: Difficulty range invalid!\n");
+        return;
+    }
+    if(difficulty_max <= 0 || difficulty_max > 39){
+        printf("ERROR: Difficulty range invalid!\n");
+        return;
+    }
+    if(difficulty_max < difficulty_min){
         printf("ERROR: Difficulty range invalid!\n");
         return;
     }
