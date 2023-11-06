@@ -247,7 +247,7 @@ struct route *create_route(
     new_route->length = length;
     strcpy(new_route->name, name);
     new_route->next = NULL;
-
+    new_route->attempts = NULL;
     // hint: you will have to replace NULL in this return statement.
     return new_route;
 }
@@ -846,7 +846,7 @@ void combine_routes(struct logbook *logbook, struct route_name *most_recent_rout
         return;
     }
     struct route *route = logbook->routes;
-    struct route *pre = NULL;
+    //struct route *pre = NULL;
     struct route *route_1_ptr = NULL;
     struct route *route_2_ptr = NULL;
     while (route != NULL) {
